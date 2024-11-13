@@ -41,14 +41,16 @@ class RedisManager:
         # keep track of channel subscription counts
         self.channel_subscription_counts = {}
 
-    def get_battery_ids(self) -> set:
+    def get_battery_ids(self) -> set[int]:
         """
-        Fetch battery IDs from the info:batteries:ids set.
+        Fetch battery IDs from the info:batteries:ids set and
+            convert them to integers.
 
         Returns:
-            set: A set of battery IDs as strings.
+            set[int]: A set of battery IDs as integers.
         """
-        return self.redis_client.smembers(self.battery_ids_key)
+        return {int(battery_id) for battery_id in
+                self.redis_client.smembers(self.battery_ids_key)}
 
     def get_battery_data(self) -> dict:
         """
@@ -62,7 +64,11 @@ class RedisManager:
         battery_ids = self.get_battery_ids()
         for battery_id in battery_ids:
             key = f'battery:{battery_id}:data'
-            battery_data[key] = self.redis_client.get(key)
+            raw_data = self.redis_client.hgetall(key)
+            # Decode each key and convert all values to int
+            decoded_data = {k.decode('utf-8'): int(v) for k, v in
+                            raw_data.items()}
+            battery_data[key] = decoded_data
         return battery_data
 
     def subscribe_to_channels(self) -> redis.client.PubSub:
@@ -75,7 +81,7 @@ class RedisManager:
         """
         battery_ids = self.get_battery_ids()
         for battery_id in battery_ids:
-            channel = f"battery:{int(battery_id)}:data"
+            channel = f"battery:{battery_id}:data"
             self.redis_pubsub.subscribe(channel)
             # Update the subscription count
             if channel in self.channel_subscription_counts:

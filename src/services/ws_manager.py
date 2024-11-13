@@ -52,6 +52,7 @@ class WebSocketManager:
         logger.info("Client connected")
         self.active_connections.add(websocket)
         initial_data = self.redis_manager.get_battery_data()
+        print(initial_data)
         await websocket.send_json(initial_data)
 
         # Start the Redis listener if this is the first connection
@@ -95,13 +96,40 @@ class WebSocketManager:
 
     async def listen_to_redis_channels(self) -> None:
         """
-        Listens to Redis channels for updates and broadcasts received
-        messages to all active WebSocket connections.
+        Listens to Redis channels for updates, retrieves the latest data,
+        and broadcasts it to all active WebSocket connections.
         """
         pubsub = self.redis_manager.subscribe_to_channels()
         while True:
             message = pubsub.get_message(ignore_subscribe_messages=True)
             if message:
-                message["ws_timestamp"] = utc_now_timestamp()
-                await self.broadcast(message)
-            await asyncio.sleep(0.01)  # Prevent a tight loop
+                # Decode the channel name and data if they are in bytes
+                channel = message.get('channel')
+                if isinstance(channel, bytes):
+                    channel = channel.decode('utf-8')
+
+                # Extract the battery_id from the channel name
+                # Channel format: "battery:{battery_id}:data"
+                if channel.startswith("battery:") and channel.endswith(
+                        ":data"):
+                    battery_id = channel.split(":")[1]  # Extract battery_id
+
+                    # Fetch the latest data for this battery from Redis
+                    redis_key = f"battery:{battery_id}:data"
+                    latest_data = self.redis_manager.redis_client.hgetall(
+                        redis_key)
+
+                    # Convert bytes to strings/integers as needed
+                    latest_data = {k.decode('utf-8'): int(v) for k, v in
+                                   latest_data.items()}
+
+                    # Add a timestamp for WebSocket tracking
+                    latest_data["ws_timestamp"] = utc_now_timestamp()
+
+                    time_difference = latest_data["ws_timestamp"] - \
+                                      latest_data["timestamp"]
+                    latest_data["latency_ms"] = time_difference
+
+                    # Broadcast the latest data
+                    await self.broadcast({redis_key: latest_data})
+            await asyncio.sleep(0.001)  # Prevent a tight loop, 1ms delay
