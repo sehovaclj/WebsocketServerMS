@@ -1,0 +1,14 @@
+# envs and venvs
+.venv
+.env
+
+# ide
+.idea
+.DS_Store
+
+# compiler
+*.sw*
+*.sv*
+
+# cpython
+*__pycache__*
