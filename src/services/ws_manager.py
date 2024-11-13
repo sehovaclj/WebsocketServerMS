@@ -52,7 +52,6 @@ class WebSocketManager:
         logger.info("Client connected")
         self.active_connections.add(websocket)
         initial_data = self.redis_manager.get_battery_data()
-        print(initial_data)
         await websocket.send_json(initial_data)
 
         # Start the Redis listener if this is the first connection
