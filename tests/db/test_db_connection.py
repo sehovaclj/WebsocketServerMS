@@ -6,7 +6,7 @@ import pytest
 from src.db.connection import connect_to_redis
 
 
-@pytest.mark.db_utils
+@pytest.mark.db_connection
 def test_connect_to_redis_success():
     """
     Unit test to connect to redis, perform ping to test connectivity, then
