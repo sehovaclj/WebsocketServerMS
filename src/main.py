@@ -37,7 +37,8 @@ async def websocket_endpoint(websocket: WebSocket) -> None:
     try:
         # Keep the WebSocket connection open to receive data, if any
         while True:
-            # Optional: Await client messages if needed
+            # Optional: Await client messages if needed, included this in case
+            # we did want bidirectional communication with the websocket
             await websocket.receive_text()
     except WebSocketDisconnect:
         logger.error("Websocket client disconnected")
