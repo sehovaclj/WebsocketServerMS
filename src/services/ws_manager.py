@@ -59,6 +59,9 @@ class WebSocketManager:
             self.redis_listener_task = asyncio.create_task(
                 self.listen_to_redis_channels())
             logger.info("Redis listener task started")
+        else:
+            # Simply subscribe to channels for this new connection
+            self.redis_manager.subscribe_to_channels()
 
     async def disconnect(self, websocket: WebSocket) -> None:
         """
