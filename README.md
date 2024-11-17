@@ -111,7 +111,7 @@ limited amount of time, especially since the Pipeline is intended to run
 - To view the logs of the running Docker container, use the
   following command:
   ```bash
-    docker logs -f websocket_server_ms_simulation_container_1
+    docker logs -f ws_server_ms_simulation_container_1
     ```
 
 **Note:** In a production environment, the logs would typically be redirected
