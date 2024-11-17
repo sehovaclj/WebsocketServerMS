@@ -121,6 +121,74 @@ enable visualization and analysis on a dashboard. However, for the purposes of
 this demo, I opted against introducing additional overhead to the Docker
 container to minimize latency as much as possible.
 
+### Websocket Connection
+
+`WEBSOCKET` `ws://localhost:8001/ws`
+
+#### Description
+
+This WebSocket connection allows clients to receive real-time updates for
+battery data. On establishing the WebSocket connection, an initial payload
+containing the current state of the battery is sent. Subsequent updates are
+pushed to the client as new data becomes available.
+
+#### Initial Connection Response
+
+Upon connecting, the server sends a JSON response containing the current state
+of the battery data.
+
+#### Example Initial Response
+
+```json
+{
+  "battery:1:data": {
+    "timestamp": 1731801715542,
+    "voltage": 136,
+    "current": 108,
+    "temperature": 347,
+    "state_of_charge": 36,
+    "state_of_health": 49
+  },
+  "battery:2:data": {
+    ...
+  },
+  ...
+}
+```
+
+#### Update Messages
+
+After the initial connection, the client receives updates as new data becomes
+available. Each update includes all fields from the initial response, along
+with additional fields such as `latency_ms`.
+
+#### Example Update
+
+```json
+{
+  "battery:1:data": {
+    "timestamp": 1731801715549,
+    "voltage": 130,
+    "current": 110,
+    "temperature": 340,
+    "state_of_charge": 35,
+    "state_of_health": 48,
+    "latency_ms": 7
+  }
+}
+```
+
+#### Notes
+
+- Ensure the WebSocket client can handle real-time updates and processes
+  incoming
+  data efficiently.
+- The `latency_ms` field is only present in updates, providing an estimate of
+  the
+  data latency.
+- If the connection is interrupted, reconnect to receive the latest data and
+  updates.
+
 ## Testing
 
 There is no need to explicitly run the linter or unit tests, since the
